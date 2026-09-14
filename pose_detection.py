@@ -1,5 +1,7 @@
+
 import cv2
 import mediapipe as mp
+import time
 
 # Initialize MediaPipe Pose
 mp_pose = mp.solutions.pose
@@ -23,16 +25,19 @@ if not cap.isOpened():
 print("Pose Detection Started")
 print("Press Q to exit")
 
+# FPS variables
+previous_time = 0
+
 while True:
 
-    # Read frame from webcam
+    # Capture frame
     success, frame = cap.read()
 
     if not success:
         print("Failed to read webcam frame.")
         break
 
-    # Flip image for mirror view
+    # Flip frame for mirror view
     frame = cv2.flip(frame, 1)
 
     # Convert BGR to RGB
@@ -44,7 +49,7 @@ while True:
     # Detect pose
     results = pose.process(rgb_frame)
 
-    # Draw pose landmarks
+    # Check if pose is detected
     if results.pose_landmarks:
 
         mp_draw.draw_landmarks(
@@ -53,7 +58,47 @@ while True:
             mp_pose.POSE_CONNECTIONS
         )
 
-    # Display output
+        cv2.putText(
+            frame,
+            "Pose Detected",
+            (20, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0),
+            2
+        )
+
+    else:
+
+        cv2.putText(
+            frame,
+            "No Pose Detected",
+            (20, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 0, 255),
+            2
+        )
+
+    # Calculate FPS
+    current_time = time.time()
+
+    fps = 1 / (current_time - previous_time) if previous_time != 0 else 0
+
+    previous_time = current_time
+
+    # Display FPS
+    cv2.putText(
+        frame,
+        f"FPS: {int(fps)}",
+        (20, 80),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (255, 255, 0),
+        2
+    )
+
+    # Display webcam
     cv2.imshow(
         "MediaPipe Pose Detection",
         frame
